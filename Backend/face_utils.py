@@ -8,7 +8,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Load embeddings database
-EMBEDDINGS_PATH = os.getenv("EMBEDDINGS_PATH", "Backend/Data/embeddings.pkl")
+# Try multiple path options
+EMBEDDINGS_PATH = os.getenv("EMBEDDINGS_PATH", None)
+if not EMBEDDINGS_PATH:
+    # Try relative paths
+    possible_paths = [
+        "Backend/Data/embeddings.pkl",
+        "Data/embeddings.pkl",
+        "./Data/embeddings.pkl",
+        os.path.join(os.path.dirname(__file__), "Data/embeddings.pkl")
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            EMBEDDINGS_PATH = path
+            break
+    if not EMBEDDINGS_PATH:
+        EMBEDDINGS_PATH = "Backend/Data/embeddings.pkl"
+
 EMBEDDINGS_DB = {}
 
 try:
@@ -17,7 +33,7 @@ try:
             EMBEDDINGS_DB = pickle.load(f)
         logger.info(f"Loaded {len(EMBEDDINGS_DB)} embeddings from {EMBEDDINGS_PATH}")
     else:
-        logger.warning(f"Embeddings file not found at {EMBEDDINGS_PATH}")
+        logger.warning(f"Embeddings file not found at {EMBEDDINGS_PATH}. System will run without face recognition until embeddings are generated.")
 except Exception as e:
     logger.error(f"Error loading embeddings: {str(e)}")
 
