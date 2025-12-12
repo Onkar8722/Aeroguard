@@ -20,32 +20,21 @@ A comprehensive facial recognition surveillance system designed for airport secu
 ```
 AERO/
 ├── Backend/
-│   ├── app.py                 # FastAPI server
+│   ├── app.py                 # Flask server (Python fullstack)
 │   ├── camera_manager.py      # Camera stream handling
 │   ├── face_utils.py          # Face recognition logic
 │   ├── setup.py               # Embedding generation utility
+│   ├── requirements.txt       # Python dependencies
 │   ├── .env                   # Environment variables
+│   ├── templates/
+│   │   └── index.html         # Dashboard UI (Jinja2)
+│   ├── static/
+│   │   ├── style.css          # Modern dark theme CSS
+│   │   └── script.js          # Client-side JavaScript
 │   └── Data/                  # (excluded from git)
 │       ├── Images/            # Face images for database
 │       ├── profile.xlsx       # Profile data
 │       └── embeddings.pkl     # Generated embeddings
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx            # Main React component
-│   │   ├── api.js             # API client with error handling
-│   │   ├── main.jsx           # React entry point
-│   │   ├── index.css          # Tailwind styles
-│   │   └── components/
-│   │       ├── CameraFeed.jsx
-│   │       ├── SecurityAlerts.jsx
-│   │       ├── StatusCards.jsx
-│   │       ├── SurveillanceControl.jsx
-│   │       └── UploadBox.jsx
-│   ├── .env                   # Frontend env variables
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
 │
 └── README.md                  # This file
 ```
@@ -56,10 +45,11 @@ AERO/
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 18, Vite, Tailwind CSS |
-| **Backend** | FastAPI, OpenCV, face_recognition |
+| **Frontend** | HTML5, Vanilla JavaScript, CSS3 |
+| **Backend** | Flask, OpenCV, face_recognition |
+| **Templates** | Jinja2 (server-side rendering) |
 | **Database** | Pickle (embeddings), Excel (profiles) |
-| **Build Tools** | npm, Vite |
+| **Architecture** | Python-only fullstack (no npm/Node.js) |
 
 ---
 
@@ -68,8 +58,7 @@ AERO/
 ### Prerequisites
 
 - Python 3.8+
-- Node.js 14+
-- npm or yarn
+- pip (Python package manager)
 
 ### Backend Setup
 
@@ -81,22 +70,20 @@ cd Backend
 2. Create a virtual environment:
 ```bash
 python -m venv venv
-source venv/Scripts/activate  # Windows
+venv\Scripts\activate  # Windows
 # or
 source venv/bin/activate  # macOS/Linux
 ```
 
 3. Install dependencies:
 ```bash
-pip install fastapi uvicorn opencv-python face_recognition pandas openpyxl
+pip install -r requirements.txt
 ```
 
 4. Configure environment variables (`.env`):
 ```env
-CORS_ORIGINS=http://localhost:5173
-DATA_DIR=Backend/Data/Images
-PROFILE_FILE=Backend/Data/profile.xlsx
-EMBEDDINGS_PATH=Backend/Data/embeddings.pkl
+FLASK_ENV=development
+DEBUG=True
 LOG_LEVEL=INFO
 ```
 
@@ -105,46 +92,32 @@ LOG_LEVEL=INFO
 python setup.py
 ```
 
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Configure environment variables (`.env`):
-```env
-VITE_API_URL=http://127.0.0.1:8000
-```
-
 ---
 
 ## Running the Application
 
-### Backend
+### Start the Flask Server
 
 ```bash
 cd Backend
-uvicorn app:app --reload --port 8000
+python app.py
 ```
 
-Backend will be available at: `http://127.0.0.1:8000`
+The application will be available at: **`http://127.0.0.1:5000`**
 
-### Frontend
-
-In a new terminal:
-
-```bash
-cd frontend
-npm run dev
+You should see output like:
+```
+ * Running on http://127.0.0.1:5000
+ * Press CTRL+C to quit
 ```
 
-Frontend will be available at: `http://localhost:5173`
+### Accessing the Dashboard
+
+Open your browser to `http://127.0.0.1:5000` to access the surveillance dashboard with:
+- Live camera feeds
+- Real-time alerts
+- Suspicious person upload
+- System status monitoring
 
 ---
 
@@ -152,26 +125,35 @@ Frontend will be available at: `http://localhost:5173`
 
 ### Cameras
 
-**GET** `/cameras`
+**GET** `/api/cameras`
 - List all available cameras
 - Response: `{"cameras": ["cam1", "cam2", ...]}`
 
-**GET** `/stream/{cam_id}`
+**GET** `/api/stream/<cam_id>`
 - Stream live video from camera with face detection overlays
-- Returns MJPEG stream
+- Returns MJPEG stream (display with `<img src="/api/stream/cam1">`)
 
 ### Face Recognition
 
-**POST** `/upload_suspicious`
+**POST** `/api/upload_suspicious`
 - Upload image to match against database
 - Body: FormData with `file` (image)
 - Response: `{"matches": [{"urn": "...", "distance": 0.45, ...}]}`
 
-### Health
+### Health & Status
 
-**GET** `/`
+**GET** `/api/health`
 - Health check endpoint
 - Response: `{"status": "running", "message": "..."}`
+
+**GET** `/api/status`
+- Get system status (cameras, embeddings loaded, etc.)
+- Response: `{"cameras": 1, "embeddings_loaded": true, ...}`
+
+### Dashboard
+
+**GET** `/`
+- Renders the main surveillance dashboard (index.html)
 
 ---
 
@@ -181,17 +163,9 @@ Frontend will be available at: `http://localhost:5173`
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated CORS allowed origins |
-| `DATA_DIR` | `Backend/Data/Images` | Directory containing face images |
-| `PROFILE_FILE` | `Backend/Data/profile.xlsx` | Excel file with profile data |
-| `EMBEDDINGS_PATH` | `Backend/Data/embeddings.pkl` | Path to embeddings database |
-| `LOG_LEVEL` | `INFO` | Logging level |
-
-### Frontend (.env)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VITE_API_URL` | `http://127.0.0.1:8000` | Backend API URL |
+| `FLASK_ENV` | `development` | Flask environment mode |
+| `DEBUG` | `True` | Enable debug mode (disable in production) |
+| `LOG_LEVEL` | `INFO` | Logging level (INFO, DEBUG, WARNING) |
 
 ---
 
@@ -282,10 +256,10 @@ CAMERAS = {
 
 ### Backend won't start
 ```bash
-# Check if port 8000 is in use
-netstat -ano | findstr :8000
+# Check if port 5000 is in use
+netstat -ano | findstr :5000
 
-# Kill the process
+# Kill the process (Windows)
 taskkill /PID <PID> /F
 ```
 
@@ -296,11 +270,48 @@ taskkill /PID <PID> /F
 ### No embeddings loaded
 - Ensure `embeddings.pkl` exists in `Backend/Data/`
 - Run `python Backend/setup.py` to generate
+- System will continue to work without embeddings (no face matching)
 
 ### Frontend can't reach backend
-- Verify backend is running on port 8000
-- Check `VITE_API_URL` in `.env`
-- Check CORS settings in `Backend/.env`
+- Verify backend is running on port 5000
+- Check browser console (F12) for network errors
+- Ensure Flask CORS is configured correctly
+
+---
+
+## Production Deployment
+
+### Using Gunicorn (Recommended)
+
+1. Install Gunicorn:
+```bash
+pip install gunicorn
+```
+
+2. Run Flask app with Gunicorn:
+```bash
+cd Backend
+gunicorn --workers=4 --bind=0.0.0.0:5000 app:app
+```
+
+### Using uWSGI
+
+```bash
+pip install uwsgi
+uwsgi --http=:5000 --wsgi-file=app.py --callable=app --processes=4 --threads=2
+```
+
+### Security Checklist
+
+- [ ] Set `DEBUG=False` in production
+- [ ] Use environment variables for secrets
+- [ ] Enable HTTPS/TLS with reverse proxy (nginx/Apache)
+- [ ] Add authentication (JWT, OAuth2)
+- [ ] Implement rate limiting
+- [ ] Add audit logging
+- [ ] Validate all file uploads
+- [ ] Use a proper database (PostgreSQL) instead of pickle
+- [ ] Set up CORS restrictions properly
 
 ---
 
