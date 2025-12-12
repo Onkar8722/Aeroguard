@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AERO - Airport Surveillance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🛡️ AERO - Airport Surveillance</h1>
+            <div class="status-badge" id="systemStatus">INITIALIZING...</div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="main-grid">
+            <!-- Status Cards -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>Active Cameras</h3>
+                    <p id="activeCameras" class="stat-value">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Alerts</h3>
+                    <p id="alertCount" class="stat-value">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>System Status</h3>
+                    <p id="systemStatusText" class="stat-value">ONLINE</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Matches Found</h3>
+                    <p id="matchCount" class="stat-value">0</p>
+                </div>
+            </section>
+
+            <!-- Left Panel: Controls & Upload -->
+            <aside class="left-panel">
+                <!-- Upload Box -->
+                <div class="card">
+                    <h2>Upload Suspicious Photo</h2>
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="upload-area" id="uploadArea">
+                            <p>📸 Drag image here or click to select</p>
+                            <input type="file" id="fileInput" accept="image/*" hidden>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Analyze Image</button>
+                    </form>
+                    <div id="uploadStatus" class="upload-status"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="card">
+                    <h2>System Controls</h2>
+                    <button class="btn btn-success" onclick="startSurveillance()">Start Surveillance</button>
+                    <button class="btn btn-danger" onclick="stopSurveillance()">Stop Surveillance</button>
+                    <div class="control-item">
+                        <label for="threshold">Confidence Threshold</label>
+                        <input type="range" id="threshold" min="0" max="100" value="60">
+                        <span id="thresholdValue">60%</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Camera Feed -->
+            <section class="camera-section">
+                <div class="card full-height">
+                    <h2>Live Camera Feed</h2>
+                    <div id="cameraContainer">
+                        <img id="cameraFeed" src="" alt="Camera Feed" class="camera-feed">
+                        <p id="feedStatus">Select a camera to start streaming...</p>
+                    </div>
+                    <div class="camera-selector">
+                        <select id="cameraSelect" onchange="switchCamera(this.value)">
+                            <option value="">Select Camera...</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Alerts -->
+            <aside class="right-panel">
+                <div class="card full-height">
+                    <h2>🚨 Security Alerts</h2>
+                    <div id="alertsList" class="alerts-container">
+                        <p class="no-alerts">No alerts yet</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Modal for detailed matches -->
+    <div id="matchesModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close" onclick="closeModal()">&times;</button>
+            <h2>Face Matches</h2>
+            <div id="matchesList"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
