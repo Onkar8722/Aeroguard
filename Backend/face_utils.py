@@ -29,8 +29,28 @@ EMBEDDINGS_DB = {}
 
 try:
     if os.path.exists(EMBEDDINGS_PATH):
-        with open(EMBEDDINGS_PATH, "rb") as f:
-            EMBEDDINGS_DB = pickle.load(f)
+        try:
+            with open(EMBEDDINGS_PATH, "rb") as f:
+                EMBEDDINGS_DB = pickle.load(f)
+        except ModuleNotFoundError as mnf:
+            # Handle numpy internal module name changes in some environments
+            msg = str(mnf)
+            if "numpy._core" in msg or "numpy._multiarray_umath" in msg:
+                import importlib, sys
+                try:
+                    sys.modules.setdefault("numpy._core", importlib.import_module("numpy.core"))
+                except Exception:
+                    # fallback: try to ensure numpy is imported
+                    try:
+                        import numpy as _np  # noqa: F401
+                    except Exception:
+                        pass
+                # Retry loading after mapping
+                with open(EMBEDDINGS_PATH, "rb") as f:
+                    EMBEDDINGS_DB = pickle.load(f)
+            else:
+                raise
+
         logger.info(f"Loaded {len(EMBEDDINGS_DB)} embeddings from {EMBEDDINGS_PATH}")
     else:
         logger.warning(f"Embeddings file not found at {EMBEDDINGS_PATH}. System will run without face recognition until embeddings are generated.")
